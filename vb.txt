@@ -1,0 +1,351 @@
+
+
+
+
+
+Private Sub UserForm_Activate()
+On Error Resume Next
+MkDir ThisWorkbook.Path & "\" & "FotoSiswa" & "\"
+End Sub
+
+Private Sub UserForm_Initialize()
+Call db
+
+End Sub
+
+
+Sub db()
+With UserForm1.ListBox1
+.ColumnCount = 5
+.ColumnWidths = "75;75;100;75;50"
+.ColumnHeads = True
+.RowSource = "A2:e1000"
+End With
+
+End Sub
+
+
+Private Sub PilihFoto_Click()
+On Error Resume Next
+With Application.FileDialog(msoFileDialogFilePicker)
+        .AllowMultiSelect = False
+        .ButtonName = "Dikelik Dicini"
+        .Title = "Klik salah satu foto"
+        .Filters.Add "File Foto", "*.gif; *.Jpeg; *.jpg; *.bmp", 1
+        .InitialFileName = ThisWorkbook.Path & "\" & "FotoSiswa" & "\" & TextBox1.Value
+        '.InitialFileName = TextBox1.Value
+        If .Show = -1 Then
+            Me.TextBox5.Text = .SelectedItems(1)
+            Me.Image2.PictureSizeMode = fmPictureSizeModeStretch
+            Me.Image2.Picture = LoadPicture(.SelectedItems(1))
+        Else
+        End If
+    End With
+
+End Sub
+
+Sub BERSIHKAN()
+Dim AdaText
+    For Each AdaText In Me.Controls
+        If TypeOf AdaText Is MSForms.TextBox Then
+            AdaText.Text = ""
+        End If
+    Next AdaText
+Me.TextBox1.SetFocus
+End Sub
+
+Private Sub Tambah_Click()
+  Dim iRow As Long
+    Dim Ws As Worksheet
+    Set Ws = Worksheets("Sheet1")
+    Dim Path As String
+    Path = ThisWorkbook.Path & "\" & "FotoSiswa" & "\"
+     'Menemukan baris kosong pada database
+    iRow = Ws.Cells(Rows.Count, 3) _
+    .End(xlUp).Offset(1, 0).Row
+     
+    If WorksheetFunction.CountIf(Ws.Range("A2", Ws.Cells(iRow - 1, 3)), Me.TextBox1.Value) > 0 Then
+        MsgBox "NIS Sudah ada dalam Database, Silakan Lakukan edit jika ada kesalahan", vbCritical
+        Exit Sub
+    End If
+     
+     'Cek data yang dientri pada tetxbox1
+    If Trim(Me.TextBox1.Value) = "" Then
+        Me.TextBox1.SetFocus
+        MsgBox "Silakan Masukan NIS"
+        Exit Sub
+    End If
+    If Trim(Me.TextBox2.Value) = "" Then
+        Me.TextBox2.SetFocus
+        MsgBox "Silakan Masukan Nama"
+        Exit Sub
+    End If
+     
+     'copy data ke database
+    Ws.Cells(iRow, 1).Value = Me.TextBox1.Value
+    Ws.Cells(iRow, 2).Value = Me.TextBox2.Value
+    Ws.Cells(iRow, 3).Value = Me.TextBox3.Value
+    Ws.Cells(iRow, 4).Value = Me.TextBox4.Value
+    Ws.Cells(iRow, 5).Value = Path & Me.TextBox1.Value & ".jpg"
+    SavePicture UserForm1.Image2.Picture, Path & UserForm1.TextBox1.Value & ".jpg"
+Call BERSIHKAN
+End Sub
+
+Private Sub edit_Click()
+  Dim Path As String: Path = ThisWorkbook.Path & "\" & "FotoSiswa" & "\"
+If Me.TextBox1.Value = "" Then
+   MsgBox "Maaf, mau edit data siapa? Silakan masukan dulu NIM nya", vbInformation, "Info"
+   Me.TextBox1.SetFocus
+   Exit Sub
+End If
+If TextBox2.Value = "" Then
+MsgBox "TIdak ada yang harus diedit", vbInformation, "Info"
+Else
+Nomor = Trim(Me.TextBox1.Value)
+    With Sheets("Sheet1")
+    baris = .Columns("A").Find(Nomor).Row
+        .Range("A" & baris).Value = Me.TextBox1.Value
+        .Range("B" & baris).Value = Me.TextBox2.Value
+        .Range("C" & baris).Value = Me.TextBox3.Value
+        .Range("D" & baris).Value = Me.TextBox4.Value
+        .Range("E" & baris).Value = Path & Me.TextBox1.Value & ".jpg"
+        SavePicture UserForm1.Image2.Picture, Path & UserForm1.TextBox1.Value & ".jpg"
+    End With
+    MsgBox "Data berhasil diupdate ", vbInformation, "Info"
+
+    Call BERSIHKAN
+    Tambah.Enabled = True
+End If
+End Sub
+
+
+Private Sub hapus_Click()
+Dim PEsan As String
+Dim Ws As Worksheet
+Set Ws = Worksheets("sheet1")
+Dim shtSeason As Worksheet
+Dim c As Range
+If TextBox2.Value = "" Then
+MsgBox "Tidak ada data untuk dihapus", vbInformation, "Info"
+Else
+
+PEsan = TextBox2.Text + " - Akan dihapus dari database, Anda yakin? "
+If MsgBox(PEsan, vbQuestion + vbYesNo, _
+"Konfirmasi Penghapusan") = vbYes Then
+
+
+Set shtSeason = Sheets("Sheet1")
+Set c = shtSeason.Columns(1).Find(TextBox1.Text)
+c.Resize(, 6).Delete Shift:=xlUp
+MsgBox "Data Berhasil Dihapus", vbOKOnly
+     'kosongkan semua textbox
+Call BERSIHKAN
+End If
+End If
+End Sub
+
+Private Sub TextBox1_Change()
+Dim TidakDitemukan As Range
+    Set TidakDitemukan = Sheets("sheet1").Cells.Find(What:=TextBox1, LookIn:=xlFormulas, LookAt:=xlWhole)
+Dim Cekdulu As String
+Set NamaSheet = Sheets("Sheet1")
+Dim Path As String: Path = ThisWorkbook.Path & "\" & "FotoSiswa" & "\"
+On Error Resume Next
+Set NamaRange = NamaSheet.Range("A2:A1000")
+
+If TextBox1.Value = "" Then
+    TextBox2.Value = ""
+    TextBox3.Value = ""
+    TextBox4.Value = ""
+    TextBox5.Value = ""
+    UserForm1.Image2.Picture = UserForm1.Image1.Picture
+End If
+
+Set c = NamaRange.Find(TextBox1.Value, LookIn:=xlValues, _
+MatchCase:=False)
+
+TextBox2.Value = c.Offset(0, 1).Value
+TextBox3.Value = c.Offset(0, 2).Value
+TextBox4.Value = c.Offset(0, 3).Value
+TextBox5.Value = c.Offset(0, 4).Value
+UserForm1.Image2.Picture = LoadPicture(Path & UserForm1.TextBox1.Value & ".jpg")
+lEdit.Caption = "Update"
+
+    
+    Cekdulu = TextBox1.Value
+    Set FoundRange = Sheets("sheet1").Cells.Find(What:=Cekdulu, LookIn:=xlFormulas, LookAt:=xlWhole)
+     
+    If FoundRange Is Nothing Then
+        TextBox2.Text = ""
+        TextBox3.Text = ""
+        TextBox4.Text = ""
+        TextBox5.Value = ""
+        UserForm1.Image2.Picture = UserForm1.Image2.Picture
+        TombolEdit.Caption = "Edit"
+    End If
+    If TextBox1.Value = "" Then
+    edit.Caption = "Edit"
+    End If
+
+End Sub
+
+
+
+
+
+
+
+
+
+
+
+
+
+Sub BERSIHKAN()
+Dim AdaText
+    For Each AdaText In Me.Controls
+        If TypeOf AdaText Is MSForms.TextBox Then
+            AdaText.Text = ""
+        End If
+    Next AdaText
+Me.TextBox1.SetFocus
+End Sub
+
+
+
+Private Sub Tambah_Click()
+  Dim iRow As Long
+    Dim Ws As Worksheet
+    Set Ws = Worksheets("Sheet2")
+    Dim Path As String
+   
+     'Menemukan baris kosong pada database
+    iRow = Ws.Cells(Rows.Count, 3) _
+    .End(xlUp).Offset(1, 0).Row
+     
+    If WorksheetFunction.CountIf(Ws.Range("A2", Ws.Cells(iRow - 1, 3)), Me.TextBox1.Value) > 0 Then
+        MsgBox "NIS Sudah ada dalam Database, Silakan Lakukan edit jika ada kesalahan", vbCritical
+        Exit Sub
+    End If
+     
+     'Cek data yang dientri pada tetxbox1
+    If Trim(Me.TextBox1.Value) = "" Then
+        Me.TextBox1.SetFocus
+        MsgBox "Silakan Masukan NIS"
+        Exit Sub
+    End If
+    If Trim(Me.TextBox2.Value) = "" Then
+        Me.TextBox2.SetFocus
+        MsgBox "Silakan Masukan Nama"
+        Exit Sub
+    End If
+     
+     'copy data ke database
+    Ws.Cells(iRow, 1).Value = Me.TextBox1.Value
+    Ws.Cells(iRow, 2).Value = Me.TextBox2.Value
+    Ws.Cells(iRow, 3).Value = Me.TextBox3.Value
+    Ws.Cells(iRow, 4).Value = Me.TextBox4.Value
+   
+   
+Call BERSIHKAN
+End Sub
+
+Private Sub edit_Click()
+ 
+If Me.TextBox1.Value = "" Then
+   MsgBox "Maaf, mau edit data siapa? Silakan masukan dulu NIM nya", vbInformation, "Info"
+   Me.TextBox1.SetFocus
+   Exit Sub
+End If
+If TextBox2.Value = "" Then
+MsgBox "TIdak ada yang harus diedit", vbInformation, "Info"
+Else
+Nomor = Trim(Me.TextBox1.Value)
+    With Sheets("Sheet2")
+    baris = .Columns("A").Find(Nomor).Row
+        .Range("A" & baris).Value = Me.TextBox1.Value
+        .Range("B" & baris).Value = Me.TextBox2.Value
+        .Range("C" & baris).Value = Me.TextBox3.Value
+        .Range("D" & baris).Value = Me.TextBox4.Value
+        
+    End With
+    MsgBox "Data berhasil diupdate ", vbInformation, "Info"
+
+    Call BERSIHKAN
+    Tambah.Enabled = True
+End If
+End Sub
+
+
+Private Sub hapus_Click()
+
+Dim PEsan As String
+Dim Ws As Worksheet
+Set Ws = Worksheets("sheet2")
+Dim shtSeason As Worksheet
+Dim c As Range
+If TextBox2.Value = "" Then
+MsgBox "Tidak ada data untuk dihapus", vbInformation, "Info"
+Else
+
+PEsan = TextBox2.Text + " - Akan dihapus dari database, Anda yakin? "
+If MsgBox(PEsan, vbQuestion + vbYesNo, _
+"Konfirmasi Penghapusan") = vbYes Then
+
+
+Set shtSeason = Sheets("Sheet2")
+Set c = shtSeason.Columns(1).Find(TextBox1.Text)
+c.Resize(, 6).Delete Shift:=xlUp
+MsgBox "Data Berhasil Dihapus", vbOKOnly
+     'kosongkan semua textbox
+Call BERSIHKAN
+End If
+End If
+End Sub
+
+Private Sub TextBox1_Change()
+Dim TidakDitemukan As Range
+    Set TidakDitemukan = Sheets("sheet2").Cells.Find(What:=TextBox1, LookIn:=xlFormulas, LookAt:=xlWhole)
+Dim Cekdulu As String
+Set NamaSheet = Sheets("Sheet2")
+
+On Error Resume Next
+Set NamaRange = NamaSheet.Range("A2:A1000")
+
+If TextBox1.Value = "" Then
+    TextBox2.Value = ""
+    TextBox3.Value = ""
+    TextBox4.Value = ""
+   
+   
+End If
+
+Set c = NamaRange.Find(TextBox1.Value, LookIn:=xlValues, _
+MatchCase:=False)
+
+TextBox2.Value = c.Offset(0, 1).Value
+TextBox3.Value = c.Offset(0, 2).Value
+TextBox4.Value = c.Offset(0, 3).Value
+
+lEdit.Caption = "Update"
+
+    
+    Cekdulu = TextBox1.Value
+    Set FoundRange = Sheets("sheet2").Cells.Find(What:=Cekdulu, LookIn:=xlFormulas, LookAt:=xlWhole)
+     
+    If FoundRange Is Nothing Then
+        TextBox2.Text = ""
+        TextBox3.Text = ""
+        TextBox4.Text = ""
+        TextBox5.Value = ""
+       
+    End If
+    If TextBox1.Value = "" Then
+    edit.Caption = "Edit"
+    End If
+
+End Sub
+
+
+
+
