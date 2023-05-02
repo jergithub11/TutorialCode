@@ -1,88 +1,40 @@
 import 'package:flutter/material.dart';
 
-void main() {
-  runApp(const UAS());
-}
+void main() => runApp(MyApp());
 
-class UAS extends StatelessWidget {
-  const UAS({super.key});
-
-  // This widget is the root of your application.
+class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
-      title: 'Kalkulator Cok!',
+      title: 'Login',
       theme: ThemeData(
-        primarySwatch: Colors.brown,
+        primarySwatch: Colors.orange,
       ),
-      home: const MyHomePage(title: 'Kalkulator Spinner'),
+      home: ExampleScreen(),
     );
   }
 }
 
-// Oprator
-const List<String> list = <String>[
-  '- Pilih Operasi -',
-  'Kali',
-  'Bagi',
-  'Tambah',
-  'Kurang',
-  'Genap',
-  'Ganjil'
-];
-
-class MyHomePage extends StatefulWidget {
-  const MyHomePage({super.key, required this.title});
-  final String title;
+class ExampleScreen extends StatefulWidget {
   @override
-  State<MyHomePage> createState() => _MyHomePageState();
+  _ExampleScreenState createState() => _ExampleScreenState();
 }
 
-class _MyHomePageState extends State<MyHomePage> {
-  String dropdownValue = list.first;
-  var bil1 = 0, bil2 = 0, sum = 0;
-  final TextEditingController t1 = TextEditingController();
-  final TextEditingController t2 = TextEditingController();
+class _ExampleScreenState extends State<ExampleScreen> {
+  final _formKey = GlobalKey<FormState>();
+  String _name = '';
+  String _email = '';
+  String _password = '';
 
-  void doAddition() {
-    setState(() {
-      bil1 = int.parse(t1.text);
-      bil2 = int.parse(t2.text);
-
-      sum = bil1 + bil2;
-    });
-  }
-
-  void doSub() {
-    setState(() {
-      bil1 = int.parse(t1.text);
-      bil2 = int.parse(t2.text);
-
-      sum = bil1 - bil2;
-    });
-  }
-
-  void doMul() {
-    setState(() {
-      bil1 = int.parse(t1.text);
-      bil2 = int.parse(t2.text);
-
-      sum = bil1 * bil2;
-    });
-  }
-
-  void doDiv() {
-    setState(() {
-      bil1 = int.parse(t1.text);
-      bil2 = int.parse(t2.text);
-
-      sum = bil1 ~/ bil2;
-    });
-  }
-
-  void ganjil() {
-    setState(() {});
+  void _submitForm() {
+    if (_formKey.currentState!.validate()) {
+      _formKey.currentState!.save();
+      print('Name: $_name');
+      print('Email: $_email');
+      print('Password: $_password');
+      // do something with the data, like send it to a server
+    }
   }
 
   @override
@@ -90,84 +42,98 @@ class _MyHomePageState extends State<MyHomePage> {
     return Scaffold(
       appBar: AppBar(
         leading: Icon(Icons.dashboard),
-        title: const Text("Kalkulator Spinner"),
+        title: Text('Dashboard'),
       ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(40.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: <Widget>[
-            const Center(
-              child: Text(
-                "Kalkulator Spinner\n     (KALSPIN)",
-                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 25),
+      body: ListView(
+        children: [
+          Stack(
+            children: [
+              Container(
+                height: 200,
+                color: Colors.white,
+              ),
+              Positioned(
+                top: 100,
+                left: 50,
+                child: Text(
+                  'Register ',
+                  style: TextStyle(fontSize: 24),
+                ),
+              ),
+            ],
+          ),
+          SizedBox(height: 20),
+          Padding(
+            padding: EdgeInsets.symmetric(horizontal: 20),
+            child: Form(
+              key: _formKey,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  TextFormField(
+                    decoration: InputDecoration(
+                      labelText: 'Name',
+                    ),
+                    onSaved: (value) => _name = value!,
+                    validator: (value) {
+                      if (value!.isEmpty) {
+                        return 'Please enter your name';
+                      }
+                      return null;
+                    },
+                  ),
+                  SizedBox(height: 10),
+                  TextFormField(
+                    decoration: InputDecoration(
+                      labelText: 'Email',
+                    ),
+                    onSaved: (value) => _email = value!,
+                    validator: (value) {
+                      if (value!.isEmpty) {
+                        return 'Please enter your email';
+                      }
+                      if (!value.contains('@')) {
+                        return 'Please enter a valid email';
+                      }
+                      return null;
+                    },
+                  ),
+                  SizedBox(height: 10),
+                  TextFormField(
+                    obscureText: true,
+                    decoration: InputDecoration(
+                      labelText: 'Password',
+                    ),
+                    onSaved: (value) => _password = value!,
+                    validator: (value) {
+                      if (value!.isEmpty) {
+                        return 'Please enter your password';
+                      }
+                      if (value.length < 8) {
+                        return 'Password must be at least 8 characters long';
+                      }
+                      return null;
+                    },
+                  ),
+                ],
               ),
             ),
-            SizedBox(
-              height: 40,
+          ),
+          SizedBox(height: 20),
+          Padding(
+            padding: EdgeInsets.symmetric(horizontal: 20),
+            child: ElevatedButton(
+              onPressed: _submitForm,
+              child: Text('Register ->'),
             ),
-            TextField(
-              keyboardType: TextInputType.number,
-              decoration: const InputDecoration(
-                  hintText: "Masukkan nilai 1 / Nilai Awal"),
-              controller: t1,
-            ),
-            TextField(
-              keyboardType: TextInputType.number,
-              decoration: const InputDecoration(
-                  hintText: "Masukkan nilai 2 / Nilai Akhir"),
-              controller: t2,
-            ),
-          
-            const Padding(
-              padding: EdgeInsets.only(top: 20.0),
-            ),
-            DropdownButton<String>(
-              value: dropdownValue,
-              icon: const Icon(Icons.architecture),
-              elevation: 16,
-              isExpanded: true,
-              
-              style: const TextStyle(color: Colors.black),
-              onChanged: (String? value) {
-                
-                // This is called when the user selects an item.
-                setState(() {
-                  dropdownValue = value!;
-                });
-              },
-              items: list.map<DropdownMenuItem<String>>((String value) {
-                return DropdownMenuItem<String>(
-                  value: value,
-                  child: Text(value),
-                );
-              }).toList(),
-            ),
-            Center(
-              child: ElevatedButton(
-                onPressed: () {
-                  if (dropdownValue == 'Kali') {
-                    doMul();
-                  } else if (dropdownValue == "Tambah") {
-                    doAddition();
-                  } else if (dropdownValue == "Bagi") {
-                    doDiv();
-                  } else if (dropdownValue == "Kurang") {
-                    doSub();
-                  }
-                },
-                child: const Text("Hitung "),
-              ),
-            ),
-            Text(
-              "hasil : $sum",
-              style: const TextStyle(
-                  fontSize: 20.0,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.black),
-            ),
-          ],
-        ),
+          ),
+          SizedBox(height: 15),
+          Text(
+            'Silahkan Click "Register", Apabila Sudah Register Dengan Benar .',
+            textAlign: TextAlign.center,
+            style: TextStyle(fontSize: 14),
+          ),
+        ],
       ),
     );
   }
